@@ -308,18 +308,37 @@ class Curl
         $lines = explode("\n", $headers_part);
         $headers = [];
 
+        $redirects = [];
+        
+        foreach ($headers as $value) {
+            $start = stripos($value, 'Location:');
+
+            if(!$start) continue;
+
+            $start += strlen('Location:') + 1;
+            $loc = substr($value, $start);
+            $end = ($end = stripos($loc, "\n")) ? $end : strlen($value);
+            $redirects[] = substr($value, $start, $end);
+        }
+
+        
+        $lines = explode("\n", $headers_part);
+        $headers = [];
+
         $headers['start'] = $lines[0];
+        $headers['redirects'] = $redirects;
+
 
         for ($i = 1; $i < count($lines); $i++) {
-                $del_pos = strpos($lines[$i], ':');
-                $name = substr($lines[$i], 0, $del_pos);
-                $value = substr($lines[$i], $del_pos + 2);
-                $headers[$name] = $value;
+            $del_pos = strpos($lines[$i], ':');
+            $name = substr($lines[$i], 0, $del_pos);
+            $value = substr($lines[$i], $del_pos + 2);
+            $headers[$name] = $value;
         }
 
         return [
-                'headers' => $headers,
-                'html' => $body_part
+            'headers' => $headers,
+            'html' => $body_part
         ];
     }
 }
